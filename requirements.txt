@@ -1,3 +1,5 @@
+discord.py
 requests
 websockets
-discord.py
+Flask
+PyNaCl

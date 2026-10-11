@@ -2,15 +2,32 @@ import os
 import asyncio
 import discord
 from discord.ext import commands
+from threading import Thread
+from flask import Flask
 
-# Khởi tạo Intents
+# 1. Tạo Flask web server giả lập để Render mở port 24/7
+app = Flask('')
+
+@app.route('/')
+def home():
+    return "Bot is alive and running!"
+
+def run_web():
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host='0.0.0.0', port=port)
+
+def keep_alive():
+    t = Thread(target=run_web)
+    t.start()
+
+# 2. Khởi tạo Intents cho Discord Bot
 intents = discord.Intents.default()
 intents.voice_states = True
 intents.guilds = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# Lấy thông tin cấu hình từ biến môi trường (Secrets)
+# Lấy thông tin cấu hình từ biến môi trường (Secrets trên Render)
 TOKEN = os.getenv("DISCORD_TOKEN")
 GUILD_ID = int(os.getenv("GUILD_ID", 0))
 CHANNEL_ID = int(os.getenv("CHANNEL_ID", 0))
@@ -50,6 +67,9 @@ async def on_ready():
     bot.loop.create_task(keep_voice_connected())
 
 if __name__ == "__main__":
+    # Khởi chạy web server ngầm trước để Render nhận diện port
+    keep_alive()
+    
     if TOKEN:
         bot.run(TOKEN)
     else:

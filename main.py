@@ -1,172 +1,56 @@
+import os
 import asyncio
-
-import json
-
-import requests
-
-import websockets
-
-
-
-TOKEN = "MTUzOTE2MTY4MzgxMjAyNDM1NQ.GU-HtF.KdQSgviSgvbksJGqAKSaRxt_Ivgy8xLzNQwUm4"
-
-GUILD_ID = "1405414026468392983"
-
-CHANNEL_ID = "1555069468869263480"
-
-
-
-STATUS = "idle" # online / dnd / idle
-
-SELF_MUTE = True
-
-SELF_DEAF = True
-
-
-
-API = "https://discord.com/api/v10"
-
-
-
-res = requests.get(f"{API}/users/@me", headers={"Authorization": TOKEN})
-
-if res.status_code != 200:
-
-    print("Invalid token!")
-
-    exit()
-
-
-
-user = res.json()
-
-print(f"Logged in as {user['username']} ({user['id']})!")
-
-
-
-async def heartbeat(ws, interval):
-
-    while True:
-
-        await asyncio.sleep(interval / 1000)
-
-        await ws.send(json.dumps({"op": 1, "d": None}))
-
-
-
-async def main():
-
-    uri = "wss://gateway.discord.gg/?v=10&encoding=json"
-
-
-
-    async with websockets.connect(uri, max_size=10 * 1024 * 1024) as ws:
-
-        hello = json.loads(await ws.recv())
-
-        heartbeat_interval = hello["d"]["heartbeat_interval"]
-
-
-
-        asyncio.create_task(heartbeat(ws, heartbeat_interval))
-
-
-
-        await ws.send(json.dumps({
-
-            "op": 2,
-
-            "d": {
-
-                "token": TOKEN,
-
-                "properties": {
-
-                    "$os": "windows",
-
-                    "$browser": "chrome",
-
-                    "$device": "pc"
-
-                },
-
-                "presence": {
-
-                    "status": STATUS,
-
-                    "afk": False
-
-                }
-
-            }
-
-        }))
-
-
-
-        while True:
-
-            event = json.loads(await ws.recv())
-
-            if event.get("t") == "READY":
-
-                break
-
-
-
-        await ws.send(json.dumps({
-
-            "op": 4,
-
-            "d": {
-
-                "guild_id": GUILD_ID,
-
-                "channel_id": CHANNEL_ID,
-
-                "self_mute": SELF_MUTE,
-
-                "self_deaf": SELF_DEAF
-
-            }
-
-        }))
-
-
-
-        print("Joined the voice channel!")
-
-
-
-        while True:
-
-            try:
-
-                msg = await ws.recv()
-
-            except:
-
-                print("Disconnected, reconnecting...")
-
-                break
-
-
-
-async def run():
-
-    while True:
-
+import discord
+from discord.ext import commands
+
+# Khởi tạo Intents
+intents = discord.Intents.default()
+intents.voice_states = True
+intents.guilds = True
+
+bot = commands.Bot(command_prefix="!", intents=intents)
+
+# Lấy thông tin cấu hình từ biến môi trường (Secrets)
+TOKEN = os.getenv("DISCORD_TOKEN")
+GUILD_ID = int(os.getenv("GUILD_ID", 0))
+CHANNEL_ID = int(os.getenv("CHANNEL_ID", 0))
+
+async def keep_voice_connected():
+    """Hàm tự động kết nối và duy trì trạng thái trong phòng Voice 24/7"""
+    await bot.wait_until_ready()
+    
+    while not bot.is_closed():
         try:
-
-            await main()
-
+            guild = bot.get_guild(GUILD_ID)
+            if guild:
+                channel = guild.get_channel(CHANNEL_ID)
+                if channel and isinstance(channel, discord.VoiceChannel):
+                    voice_client = guild.voice_client
+                    
+                    # Nếu chưa vào phòng -> Thực hiện kết nối
+                    if voice_client is None:
+                        print(f"[VOICE] Đang kết nối vào kênh: {channel.name}...")
+                        await channel.connect(reconnect=True, self_deaf=True)
+                        print(f"[VOICE] Kết nối thành công 24/7!")
+                    # Nếu bị rớt kết nối -> Kết nối lại
+                    elif not voice_client.is_connected():
+                        print("[VOICE] Mất kết nối, đang thử kết nối lại...")
+                        await voice_client.connect(reconnect=True, self_deaf=True)
+                        
         except Exception as e:
+            print(f"[ERROR] Lỗi khi duy trì Voice: {e}")
+            
+        # Kiểm tra lại định kỳ mỗi 30 giây
+        await asyncio.sleep(30)
 
-            print("Error: ", e)
+@bot.event
+async def on_ready():
+    print(f"==== Bot đã sẵn sàng: {bot.user.name} ({bot.user.id}) ====")
+    # Khởi chạy vòng lặp treo voice ngầm
+    bot.loop.create_task(keep_voice_connected())
 
-            await asyncio.sleep(5)
-
-
-
-asyncio.run(run())
-
+if __name__ == "__main__":
+    if TOKEN:
+        bot.run(TOKEN)
+    else:
+        print("[CRITICAL] Không tìm thấy DISCORD_TOKEN trong biến môi trường!")

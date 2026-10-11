@@ -27,13 +27,16 @@ intents.guilds = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# Lấy thông tin cấu hình từ biến môi trường (Secrets trên Render)
+# Lấy Token từ biến môi trường của Render (hoặc thay trực tiếp token vào đây nếu muốn)
 TOKEN = os.getenv("DISCORD_TOKEN")
-GUILD_ID = int(os.getenv("GUILD_ID", 0))
-CHANNEL_ID = int(os.getenv("CHANNEL_ID", 0))
+
+# THAY TRỰC TIẾP ID SERVER VÀ ID KÊNH VOICE VÀO ĐÂY (Dạng số nguyên - Integer)
+GUILD_ID = 123456789012345678    # <-- Thay ID Server của bạn vào đây
+CHANNEL_ID = 123456789012345678  # <-- Thay ID Kênh Voice của bạn vào đây
 
 async def keep_voice_connected():
     """Hàm tự động kết nối và duy trì trạng thái trong phòng Voice 24/7"""
+    print(f"[DEBUG] Đang khởi chạy với GUILD_ID: {GUILD_ID}, CHANNEL_ID: {CHANNEL_ID}")
     await bot.wait_until_ready()
     
     while not bot.is_closed():
@@ -53,6 +56,10 @@ async def keep_voice_connected():
                     elif not voice_client.is_connected():
                         print("[VOICE] Mất kết nối, đang thử kết nối lại...")
                         await voice_client.connect(reconnect=True, self_deaf=True)
+                else:
+                    print(f"[WARNING] Không tìm thấy kênh voice với ID: {CHANNEL_ID} trong Server!")
+            else:
+                print(f"[WARNING] Không tìm thấy Server với ID: {GUILD_ID}!")
                         
         except Exception as e:
             print(f"[ERROR] Lỗi khi duy trì Voice: {e}")

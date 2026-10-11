@@ -36,21 +36,22 @@ CHANNEL_ID = 123456789012345678  # <-- Thay ID Kênh Voice của bạn vào đâ
 
 @bot.event
 async def on_ready():
-    print(f"==== Bot đã sẵn sàng: {bot.user.name} ({bot.user.id}) ====")
+    print(f"==== Bot đã sẵn sàng: {bot.user.name} ({bot.user.id}) ====", flush=True)
     try:
         guild = bot.get_guild(GUILD_ID)
         if guild:
+            print(f"[DEBUG] Đã tìm thấy Server: {guild.name}", flush=True)
             channel = guild.get_channel(CHANNEL_ID)
             if channel and isinstance(channel, discord.VoiceChannel):
-                print(f"[VOICE] Đang kết nối vào kênh: {channel.name}...")
+                print(f"[VOICE] Đang kết nối vào kênh: {channel.name}...", flush=True)
                 await channel.connect(reconnect=True, self_deaf=True)
-                print(f"[VOICE] Kết nối thành công vào phòng thoại!")
+                print(f"[VOICE] Kết nối thành công vào phòng thoại!", flush=True)
             else:
-                print(f"[WARNING] Không tìm thấy kênh voice với ID: {CHANNEL_ID} trong Server!")
+                print(f"[WARNING] Không tìm thấy kênh voice với ID: {CHANNEL_ID} trong Server!", flush=True)
         else:
-            print(f"[WARNING] Không tìm thấy Server với ID: {GUILD_ID}!")
+            print(f"[WARNING] Không tìm thấy Server với ID: {GUILD_ID}! (Kiểm tra lại bot đã được mời vào server này chưa)", flush=True)
     except Exception as e:
-        print(f"[ERROR] Không thể join voice: {e}")
+        print(f"[ERROR] Không thể join voice: {e}", flush=True)
 
 if __name__ == "__main__":
     # Khởi chạy web server ngầm trước để Render nhận diện port
@@ -59,4 +60,4 @@ if __name__ == "__main__":
     if TOKEN:
         bot.run(TOKEN)
     else:
-        print("[CRITICAL] Không tìm thấy DISCORD_TOKEN trong biến môi trường!")
+        print("[CRITICAL] Không tìm thấy DISCORD_TOKEN trong biến môi trường!", flush=True)

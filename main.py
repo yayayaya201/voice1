@@ -1,11 +1,38 @@
 import asyncio
 import json
+import os
 import requests
 import websockets
+from http.server import HTTPServer, BaseHTTPRequestHandler
+import threading
 
-TOKEN = "Add your token here"
-GUILD_ID = "ADD_YOUR_SERVER_ID_HERE"
-CHANNEL_ID = "ADD_YOUR_CHANNEL_ID_HERE"
+# --- 1. WEB SERVER GIA LẬP CHO UPTIMEROBOT ---
+class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"Bot is alive!")
+
+    def do_HEAD(self):
+        self.send_response(200)
+        self.end_headers()
+
+def run_http_server():
+    port = int(os.environ.get("PORT", 8080))
+    server = HTTPServer(('0.0.0.0', port), SimpleHTTPRequestHandler)
+    print(f"[HTTP] Web server started on port {port}")
+    server.serve_forever()
+
+threading.Thread(target=run_http_server, daemon=True).start()
+
+# --- 2. CẤU HÌNH LẤY TỪ RENDER ---
+TOKEN = os.environ.get("DISCORD_TOKEN")
+GUILD_ID = os.environ.get("GUILD_ID")
+CHANNEL_ID = os.environ.get("CHANNEL_ID")
+
+if not TOKEN or not GUILD_ID or not CHANNEL_ID:
+    print("[LỖI] Thiếu biến môi trường (DISCORD_TOKEN, GUILD_ID hoặc CHANNEL_ID) trên Render!")
+    exit(1)
 
 STATUS = "online" # online / dnd / idle
 SELF_MUTE = True

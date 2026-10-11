@@ -31,8 +31,8 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 TOKEN = os.getenv("DISCORD_TOKEN")
 
 # THAY TRỰC TIẾP ID SERVER VÀ ID KÊNH VOICE VÀO ĐÂY (Dạng số nguyên - Integer)
-GUILD_ID = 123456789012345678    # <-- Thay ID Server của bạn vào đây
-CHANNEL_ID = 123456789012345678  # <-- Thay ID Kênh Voice của bạn vào đây
+GUILD_ID = 1405414026468392983    # <-- Thay ID Server của bạn vào đây
+CHANNEL_ID = 1555069468869263480  # <-- Thay ID Kênh Voice của bạn vào đây
 
 @bot.event
 async def on_ready():

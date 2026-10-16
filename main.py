@@ -32,7 +32,7 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 
 # THAY TRỰC TIẾP ID SERVER VÀ ID KÊNH VOICE VÀO ĐÂY
 GUILD_ID = 1405414026468392983    # Đã lấy đúng ID từ log của bạn
-CHANNEL_ID = 1559185122367119410  # Đã lấy đúng ID từ log của bạn
+CHANNEL_ID = 1560563821079167036  # Đã lấy đúng ID từ log của bạn
 
 async def keep_voice_connected():
     """Hàm vòng lặp vô hạn tự động kiểm tra và duy trì bot trong phòng Voice 24/7"""
